@@ -33,43 +33,41 @@ class ProcessConnection extends Thread {
     String client_name;
 
     ProcessConnection(Socket new_client_sock, ArrayList<ProcessConnection> connections) {
-        try {
         client_sock = new_client_sock; 
-        Scanner sin = new Scanner(client_sock.getInputStream());
-        PrintStream sout = new PrintStream(client_sock.getOutputStream());
         all_connections = connections;
-        } catch(IOException e){}
+        client_name = "";
     }
 
     // public Boolean write(String msg) {
     //     sout.println(msg);
     // }
-
-    public void write_to_all(String msg) {
+    public void write_to_all(String clientname, String msg) {
         for(ProcessConnection connect: all_connections) {
-            connect.sout.println("@"+client_name+": "+msg);
+            connect.sout.println("@"+clientname+": "+msg);
         }
+        System.out.println("@"+clientname+": "+msg);
     }
     
     public void run() {
-        System.out.println("Client Connected");
-        try{
-            client_name = sin.nextLine();
-            try {
-                sout.println("Welcome to the Chat Server. Please enter username: ");
+        try {
+            Scanner sin = new Scanner(client_sock.getInputStream());
+            PrintStream sout = new PrintStream(client_sock.getOutputStream());
+
+            while(client_sock.isConnected())
+            {
                 String line = sin.nextLine();
-                while(line.strip().compareToIgnoreCase("EXIT") != 0) {
-                    write_to_all(line);
-                    try{ line = sin.nextLine(); }
-                    catch (Exception e) { break; }
-                } 
-                // sout.println("@"+username+": "+line);
-            } catch(Exception e){}
-            finally{
-                client_sock.close();
-                all_connections.remove(this);
+                if(client_name.equals("")) { 
+                    client_name = line;
+                }
+                else { 
+                    //write_to_all(client_name, line);
+                    System.out.println(client_name);
+                }
+                if(line.equalsIgnoreCase("EXIT")) { 
+                    client_sock.close();
+                }
             }
-        } catch(IOException e){}
-        
+            // sout.println("@"+username+": "+line);
+        } catch(Exception e){}     
     }
 }
